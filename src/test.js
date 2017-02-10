@@ -28,7 +28,8 @@
     canvas.selection = false;
     canvas.on('object:selected', function (options) {
       selectedObject = options.target;
-      colorPicker.val(selectedObject.get('stroke'));
+      strokeColor = selectedObject.get('stroke');
+      colorPicker.val(strokeColor);
     });
     canvas.on('selection:cleared', function () {
       selectedObject = null;

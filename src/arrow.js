@@ -36,7 +36,7 @@
       var coords = {
         x: [p.x1, p.x2, ap.left.x, ap.right.x],
         y: [p.y1, p.y2, ap.left.y, ap.right.y]
-      }
+      };
       var minX = fabric.util.array.min(coords.x);
       var maxX = fabric.util.array.max(coords.x);
       var minY = fabric.util.array.min(coords.y);

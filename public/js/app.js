@@ -50,7 +50,7 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
       var coords = {
         x: [p.x1, p.x2, ap.left.x, ap.right.x],
         y: [p.y1, p.y2, ap.left.y, ap.right.y]
-      }
+      };
       var minX = fabric.util.array.min(coords.x);
       var maxX = fabric.util.array.max(coords.x);
       var minY = fabric.util.array.min(coords.y);
@@ -113,7 +113,8 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
     canvas.selection = false;
     canvas.on('object:selected', function (options) {
       selectedObject = options.target;
-      colorPicker.val(selectedObject.get('stroke'));
+      strokeColor = selectedObject.get('stroke');
+      colorPicker.val(strokeColor);
     });
     canvas.on('selection:cleared', function () {
       selectedObject = null;
