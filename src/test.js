@@ -1,7 +1,4 @@
 (function () {
-  var selectedObject = null;
-  var strokeColor = '#ff0000';
-
   function getRandomInt(min, max) {
     return Math.round(min + Math.random() * max);
   }
@@ -14,7 +11,7 @@
       getRandomInt(1, 400)
     ],
     {
-      stroke: strokeColor,
+      stroke: $('#colorPicker').val(),
       arrowLength: getRandomInt(10, 50),
       arrowAngle: getRandomInt(10, 60),
       strokeWidth: getRandomInt(1, 5)
@@ -22,24 +19,10 @@
   }
 
   $(document).ready(function () {
-    var colorPicker = $('#colorPicker');
-    colorPicker.val(strokeColor);
     var canvas = new fabric.Canvas('sandbox');
-    canvas.selection = false;
-    canvas.on('object:selected', function (options) {
-      selectedObject = options.target;
-      strokeColor = selectedObject.get('stroke');
-      colorPicker.val(strokeColor);
-    });
-    canvas.on('selection:cleared', function () {
-      selectedObject = null;
-    });
-    colorPicker.change(function () {
-      if (selectedObject !== null) {
-        selectedObject.set('stroke', this.value);
-        canvas.renderAll();
-      }
-      strokeColor = this.value;
+    $('#colorPicker').canvasColorPicker({
+      color: '#cccc00',
+      canvas: canvas
     });
     $('#addRandomArrow').click(function () {
       var arrow = getRandomArrow();
