@@ -7,10 +7,10 @@
   $(document).ready(function () {
     var canvas = new fabric.Canvas('sandbox');
     var shapeDefaults = new fabric.ShapeDefaults({
-      perPixelTargetFind: true,
-      targetFindTolerance: 8
+      perPixelTargetFind: true
     });
-    canvas.selection = false;
+    canvas.set('selection', false);
+    canvas.set('targetFindTolerance', 8);
     canvas.on('object:selected', function (options) {
       shapeDefaults.merge({
         stroke: options.target.stroke,
