@@ -185,11 +185,13 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
       canvas.off('mouse:down', drawStart);
       canvas.off('mouse:move', drawSync);
       canvas.off('mouse:up', finish);
+      canvas.set('skipTargetFind', false);
     };
 
     $(this).click(function () {
       currentShape = null;
       startY = startX = 0;
+      canvas.set('skipTargetFind', true);
       canvas.deactivateAll().renderAll();
       $(cursorHandler).addClass('draw-cursor');
       canvas.on('mouse:down', drawStart);

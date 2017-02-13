@@ -35,11 +35,13 @@
       canvas.off('mouse:down', drawStart);
       canvas.off('mouse:move', drawSync);
       canvas.off('mouse:up', finish);
+      canvas.set('skipTargetFind', false);
     };
 
     $(this).click(function () {
       currentShape = null;
       startY = startX = 0;
+      canvas.set('skipTargetFind', true);
       canvas.deactivateAll().renderAll();
       $(cursorHandler).addClass('draw-cursor');
       canvas.on('mouse:down', drawStart);
