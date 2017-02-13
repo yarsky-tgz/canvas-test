@@ -14,7 +14,8 @@
     canvas.on('object:selected', function (options) {
       shapeDefaults.merge({
         stroke: options.target.stroke,
-        fill: options.target.fill
+        fill: options.target.fill,
+        strokeWidth: options.target.strokeWidth
       }, 'canvas');
     });
     shapeDefaults.on('defaults:changed', function (options) {
@@ -29,16 +30,23 @@
       canvas.renderAll();
     });
 
-    $('#strokePicker').canvasColorPicker({
-      color: '#cccc00',
+    $('#strokePicker').propertyControl({
+      value: '#cccc00',
       shapeDefaults: shapeDefaults,
       name: 'stroke'
     });
 
-    $('#fillPicker').canvasColorPicker({
-      color: '#ffffff',
+    $('#fillPicker').propertyControl({
+      value: '#ffffff',
       shapeDefaults: shapeDefaults,
       name: 'fill'
+    });
+
+    $('#strokeWidthPicker').propertyControl({
+      value: 1,
+      shapeDefaults: shapeDefaults,
+      name: 'strokeWidth',
+      format: parseInt
     });
 
     $('#drawArrow').drawer({
@@ -51,8 +59,7 @@
         ],
         {
           arrowLength: getRandomInt(10, 50),
-          arrowAngle: getRandomInt(10, 60),
-          strokeWidth: getRandomInt(1, 5)
+          arrowAngle: getRandomInt(10, 60)
         });
       },
       sync: function (shape, x, y) {
@@ -78,6 +85,28 @@
         props.width = startX < x ? x - startX : startX - x;
         props.top = startY < y ? startY : y;
         props.height = startY < y - startY ? y - startY : startY - y;
+        shape.set(props);
+      },
+      canvas: canvas,
+      cursorHandler: '.upper-canvas',
+      defaults: shapeDefaults
+    });
+
+    $('#drawEllipse').drawer({
+      create: function (x, y) {
+        return new fabric.Ellipse({
+          left: x,
+          top: y,
+          rx: 1,
+          ry: 1
+        });
+      },
+      sync: function (shape, x, y, startX, startY) {
+        var props = {};
+        props.left = startX < x ? startX : x;
+        props.top = startY < y ? startY : y;
+        props.rx = Math.round((startX < x ? x - startX : startX - x) / 2);
+        props.ry = Math.round((startY < y - startY ? y - startY : startY - y) / 2);
         shape.set(props);
       },
       canvas: canvas,

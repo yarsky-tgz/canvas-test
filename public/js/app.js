@@ -98,59 +98,6 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
 (function( $ ) {
   'use strict';
 
-  var SIGN = '_picker';
-
-  var defaultOptions = {
-    color: '#cc0000',
-    shapeDefaults: null,
-    name: 'stroke'
-  };
-
-  var CanvasColorPicker = function (element, options) {
-    var self = this;
-    this.options = $.extend({}, defaultOptions, options);
-    this.element = element;
-    this._changeColor(this.options.color, true);
-    self._applyColor();
-    this.element.change(function () {
-      self._changeColor(this.value, false);
-      self._applyColor();
-    });
-    this.options.shapeDefaults.on('defaults:changed', function (options) {
-      var defaults = options.defaults;
-      if (options.sign == SIGN) {
-        return;
-      }
-      self._changeColor(defaults[self.options.name], true)
-    });
-  };
-
-  CanvasColorPicker.prototype._changeColor = function(color, updateElement) {
-    this.options.color = color;
-    if (updateElement) {
-      this.element.val(color);
-    }
-  };
-
-  CanvasColorPicker.prototype._applyColor = function () {
-    var props = {};
-    props[this.options.name] = this.options.color
-    this.options.shapeDefaults && this.options.shapeDefaults.merge(props, 'picker');
-  };
-
-  $.fn.canvasColorPicker = function(options) {
-    return this.each(function () {
-        if (!$.data(this, 'plugin_canvasColorPicker')) {
-          $.data(this, 'plugin_canvasColorPicker',
-          new CanvasColorPicker($(this), options));
-        }
-      });
-  };
-})( jQuery );
-
-(function( $ ) {
-  'use strict';
-
   $.fn.drawer = function(options) {
     var currentShape = null;
     var createShape = options.create;
@@ -199,6 +146,60 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
   };
 })( jQuery );
 
+(function( $ ) {
+  'use strict';
+
+  var SIGN = '_picker';
+
+  var defaultOptions = {
+    value: null,
+    shapeDefaults: null,
+    name: 'stroke',
+    format: null
+  };
+
+  var PropertyControl = function (element, options) {
+    var self = this;
+    this.options = $.extend({}, defaultOptions, options);
+    this.element = element;
+    this._changeValue(this.options.value, true);
+    self._applyValue();
+    this.element.change(function () {
+      self._changeValue(this.value, false);
+      self._applyValue();
+    });
+    this.options.shapeDefaults.on('defaults:changed', function (options) {
+      var defaults = options.defaults;
+      if (options.sign == SIGN) {
+        return;
+      }
+      self._changeValue(defaults[self.options.name], true)
+    });
+  };
+
+  PropertyControl.prototype._changeValue = function(color, updateElement) {
+    this.options.value = color;
+    if (updateElement) {
+      this.element.val(color);
+    }
+  };
+
+  PropertyControl.prototype._applyValue = function () {
+    var props = {};
+    props[this.options.name] = !!this.options.format ? this.options.format(this.options.value) : this.options.value;
+    this.options.shapeDefaults && this.options.shapeDefaults.merge(props, SIGN);
+  };
+
+  $.fn.propertyControl = function(options) {
+    return this.each(function () {
+        if (!$.data(this, 'plugin_PropertyControl')) {
+          $.data(this, 'plugin_PropertyControl',
+          new PropertyControl($(this), options));
+        }
+      });
+  };
+})( jQuery );
+
 
 (function(global) {
   'use strict';
@@ -238,7 +239,8 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
     canvas.on('object:selected', function (options) {
       shapeDefaults.merge({
         stroke: options.target.stroke,
-        fill: options.target.fill
+        fill: options.target.fill,
+        strokeWidth: options.target.strokeWidth
       }, 'canvas');
     });
     shapeDefaults.on('defaults:changed', function (options) {
@@ -253,16 +255,23 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
       canvas.renderAll();
     });
 
-    $('#strokePicker').canvasColorPicker({
-      color: '#cccc00',
+    $('#strokePicker').propertyControl({
+      value: '#cccc00',
       shapeDefaults: shapeDefaults,
       name: 'stroke'
     });
 
-    $('#fillPicker').canvasColorPicker({
-      color: '#ffffff',
+    $('#fillPicker').propertyControl({
+      value: '#ffffff',
       shapeDefaults: shapeDefaults,
       name: 'fill'
+    });
+
+    $('#strokeWidthPicker').propertyControl({
+      value: 1,
+      shapeDefaults: shapeDefaults,
+      name: 'strokeWidth',
+      format: parseInt
     });
 
     $('#drawArrow').drawer({
@@ -275,8 +284,7 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
         ],
         {
           arrowLength: getRandomInt(10, 50),
-          arrowAngle: getRandomInt(10, 60),
-          strokeWidth: getRandomInt(1, 5)
+          arrowAngle: getRandomInt(10, 60)
         });
       },
       sync: function (shape, x, y) {
@@ -302,6 +310,28 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
         props.width = startX < x ? x - startX : startX - x;
         props.top = startY < y ? startY : y;
         props.height = startY < y - startY ? y - startY : startY - y;
+        shape.set(props);
+      },
+      canvas: canvas,
+      cursorHandler: '.upper-canvas',
+      defaults: shapeDefaults
+    });
+
+    $('#drawEllipse').drawer({
+      create: function (x, y) {
+        return new fabric.Ellipse({
+          left: x,
+          top: y,
+          rx: 1,
+          ry: 1
+        });
+      },
+      sync: function (shape, x, y, startX, startY) {
+        var props = {};
+        props.left = startX < x ? startX : x;
+        props.top = startY < y ? startY : y;
+        props.rx = Math.round((startX < x ? x - startX : startX - x) / 2);
+        props.ry = Math.round((startY < y - startY ? y - startY : startY - y) / 2);
         shape.set(props);
       },
       canvas: canvas,
