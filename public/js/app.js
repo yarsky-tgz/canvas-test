@@ -116,15 +116,12 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
       self._changeColor(this.value, false);
       self._applyColor();
     });
-    this.options.shapeDefaults.on('defaults:change', function (options) {
+    this.options.shapeDefaults.on('defaults:changed', function (options) {
       var defaults = options.defaults;
-      var sign = options.sign;
-
-      if (sign == SIGN) {
+      if (options.sign == SIGN) {
         return;
       }
-
-      self._changeColor(defaults[this.options.name], true)
+      self._changeColor(defaults[self.options.name], true)
     });
   };
 
