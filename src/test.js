@@ -1,32 +1,88 @@
 (function () {
+
   function getRandomInt(min, max) {
     return Math.round(min + Math.random() * max);
   }
 
-  function getRandomArrow() {
-    return new fabric.Arrow([
-      getRandomInt(1, 600),
-      getRandomInt(1, 400),
-      getRandomInt(1, 600),
-      getRandomInt(1, 400)
-    ],
-    {
-      stroke: $('#colorPicker').val(),
-      arrowLength: getRandomInt(10, 50),
-      arrowAngle: getRandomInt(10, 60),
-      strokeWidth: getRandomInt(1, 5)
-    });
-  }
-
   $(document).ready(function () {
     var canvas = new fabric.Canvas('sandbox');
-    $('#colorPicker').canvasColorPicker({
-      color: '#cccc00',
-      canvas: canvas
+    var shapeDefaults = new fabric.ShapeDefaults({
+      perPixelTargetFind: true,
+      targetFindTolerance: 8
     });
-    $('#addRandomArrow').click(function () {
-      var arrow = getRandomArrow();
-      canvas.add(arrow);
+    canvas.selection = false;
+    canvas.on('object:selected', function (options) {
+      shapeDefaults.merge({
+        stroke: options.target.stroke,
+        fill: options.target.fill
+      }, 'canvas');
+    });
+    shapeDefaults.on('defaults:changed', function (options) {
+      if (options.sign == 'canvas') {
+        return;
+      }
+      var obj = canvas.getActiveObject();
+      if (!obj) {
+        return;
+      }
+      shapeDefaults.configShape(obj);
+      canvas.renderAll();
+    });
+
+    $('#strokePicker').canvasColorPicker({
+      color: '#cccc00',
+      shapeDefaults: shapeDefaults,
+      name: 'stroke'
+    });
+
+    $('#fillPicker').canvasColorPicker({
+      color: '#ffffff',
+      shapeDefaults: shapeDefaults,
+      name: 'fill'
+    });
+
+    $('#drawArrow').drawer({
+      create: function (x, y) {
+        return new fabric.Arrow([
+          x,
+          y,
+          x + 1,
+          y + 1
+        ],
+        {
+          arrowLength: getRandomInt(10, 50),
+          arrowAngle: getRandomInt(10, 60),
+          strokeWidth: getRandomInt(1, 5)
+        });
+      },
+      sync: function (shape, x, y) {
+        shape.set({x2: x, y2: y});
+      },
+      canvas: canvas,
+      cursorHandler: '.upper-canvas',
+      defaults: shapeDefaults
+    });
+
+    $('#drawRect').drawer({
+      create: function (x, y) {
+        return new fabric.Rect({
+          left: x,
+          top: y,
+          width: 1,
+          height: 1
+        });
+      },
+      sync: function (shape, x, y, startX, startY) {
+        var props = {};
+        props.left = startX < x ? startX : x;
+        props.width = startX < x ? x - startX : startX - x;
+        props.top = startY < y ? startY : y;
+        props.height = startY < y - startY ? y - startY : startY - y;
+        shape.set(props);
+      },
+      canvas: canvas,
+      cursorHandler: '.upper-canvas',
+      defaults: shapeDefaults
     });
   });
 

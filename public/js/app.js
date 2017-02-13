@@ -14,18 +14,66 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
 
 (function () {
   'use strict';
+
+  var drawProps = { x1: 1, x2: 1, y1: 1, y2: 1, arrowLength: 1, arrowAngle: 1 };
   var pass = function () {};
+  var cacheProperties = fabric.Object.prototype.cacheProperties.concat();
+  cacheProperties.push(
+    'x1',
+    'x2',
+    'y1',
+    'y2',
+    'arrowLength',
+    'arrowAngle'
+  );
   fabric.Arrow = fabric.util.createClass(fabric.Polygon, {
     type: 'arrow',
     arrowLength: 0,
     arrowAngle: 0,
+    x1: 0,
+    y1: 0,
+    x2: 0,
+    y2: 0,
+    cacheProperties: cacheProperties,
     initialize: function(linePoints, options) {
+      this.x1 = linePoints[0];
+      this.y1 = linePoints[1];
+      this.x2 = linePoints[2];
+      this.y2 = linePoints[3];
+      this.arrowLength = options.arrowLength || 10;
+      this.arrowAngle = options.arrowAngle || 45;
+      var points = this._getPoints();
+      this.callSuper('initialize', points, options);
+    },
+    commonRender: function(ctx, noTransform) {
+      var allPoints = this.points.concat();
+      var arrowPoints = this.points.splice(2, 3);
+      this.callSuper('commonRender', ctx, noTransform);
+      this.points = arrowPoints;
+      this.callSuper('commonRender', {moveTo: ctx.moveTo.bind(ctx), lineTo: ctx.lineTo.bind(ctx), beginPath: pass}, noTransform);
+      this.points = allPoints;
+      this._renderStroke(ctx);
+      return false;
+    },
+    _set: function(key, value) {
+      this.callSuper('_set', key, value);
+      if (typeof drawProps[key] !== 'undefined') {
+        this.set('points', this._getPoints());
+        this._calcDimensions();
+        this.top = this.minY;
+        this.left = this.minX;
+        this.pathOffset = {
+          x: this.minX + this.width / 2,
+          y: this.minY + this.height / 2
+        };
+      }
+      return this;
+    },
+    _getPoints: function () {
       var points = [
-        {x: linePoints[0], y: linePoints[1]},
-        {x: linePoints[2], y: linePoints[3]}
+        {x: this.x1, y: this.y1},
+        {x: this.x2, y: this.y2}
       ];
-      this.set('arrowLength', options.arrowLength || 10);
-      this.set('arrowAngle', options.arrowAngle || 45);
       var arrowRadAngle = this.arrowAngle * Math.PI / 180;
       var lineAngle = Math.atan2(points[0].y - points[1].y, points[0].x - points[1].x);
       var leftAngle = lineAngle - arrowRadAngle;
@@ -39,17 +87,7 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
         x: this._getArrowOffset(points[1].x, rightAngle, Math.cos),
         y: this._getArrowOffset(points[1].y, rightAngle, Math.sin)
       });
-      this.callSuper('initialize', points, options);
-    },
-    commonRender: function(ctx, noTransform) {
-      var allPoints = this.points.concat();
-      var arrowPoints = this.points.splice(2, 3);
-      this.callSuper('commonRender', ctx, noTransform);
-      this.points = arrowPoints;
-      this.callSuper('commonRender', {moveTo: ctx.moveTo.bind(ctx), lineTo: ctx.lineTo.bind(ctx), beginPath: pass}, noTransform);
-      this.points = allPoints;
-      this._renderStroke(ctx);
-      return false;
+      return points;
     },
     _getArrowOffset: function (position, angle, method) {
       return position + Math.round(this.arrowLength * method(angle));
@@ -59,37 +97,35 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
 
 (function( $ ) {
   'use strict';
-  
+
+  var SIGN = '_picker';
+
   var defaultOptions = {
     color: '#cc0000',
-    canvas: null
+    shapeDefaults: null,
+    name: 'stroke'
   };
 
   var CanvasColorPicker = function (element, options) {
     var self = this;
     this.options = $.extend({}, defaultOptions, options);
-    this.selectedShape = null;
     this.element = element;
     this._changeColor(this.options.color, true);
+    self._applyColor();
     this.element.change(function () {
       self._changeColor(this.value, false);
       self._applyColor();
     });
-    this.options.canvas.on('object:selected', function (options) {
-      self._selectShape(options.target);
-    });
-    this.options.canvas.on('selection:cleared', function () {
-      self._clearShape();
-    });
-  };
+    this.options.shapeDefaults.on('defaults:change', function (options) {
+      var defaults = options.defaults;
+      var sign = options.sign;
 
-  CanvasColorPicker.prototype._selectShape = function (shape) {
-    this.selectedShape = shape;
-    this._changeColor(this.selectedShape.get('stroke'), true);
-  };
+      if (sign == SIGN) {
+        return;
+      }
 
-  CanvasColorPicker.prototype._clearShape = function () {
-    this.selectedShape = null;
+      self._changeColor(defaults[this.options.name], true)
+    });
   };
 
   CanvasColorPicker.prototype._changeColor = function(color, updateElement) {
@@ -100,10 +136,9 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
   };
 
   CanvasColorPicker.prototype._applyColor = function () {
-    if (this.selectedShape !== null) {
-      this.selectedShape.set('stroke', this.options.color);
-      this.options.canvas.renderAll();
-    }
+    var props = {};
+    props[this.options.name] = this.options.color
+    this.options.shapeDefaults && this.options.shapeDefaults.merge(props, 'picker');
   };
 
   $.fn.canvasColorPicker = function(options) {
@@ -113,38 +148,166 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
           new CanvasColorPicker($(this), options));
         }
       });
-  }
+  };
 })( jQuery );
 
+(function( $ ) {
+  'use strict';
+
+  $.fn.drawer = function(options) {
+    var currentShape = null;
+    var createShape = options.create;
+    var syncShape = options.sync;
+    var canvas = options.canvas;
+    var cursorHandler = options.cursorHandler;
+    var defaults = options.defaults;
+    var startX = 0;
+    var startY = 0;
+
+    var drawStart = function (props) {
+      var x = startX = props.e.layerX;
+      var y = startY = props.e.layerY;
+      currentShape = createShape(x, y);
+      defaults.configShape(currentShape);
+      canvas.add(currentShape);
+      canvas.on('mouse:move', drawSync);
+      canvas.on('mouse:up', finish);
+    }
+
+    var drawSync = function (props) {
+      var x = props.e.layerX;
+      var y = props.e.layerY;
+      syncShape(currentShape, x, y, startX, startY);
+      canvas.renderAll();
+    }
+
+    var finish = function() {
+      canvas.remove(currentShape);
+      canvas.add(currentShape);
+      $(cursorHandler).removeClass('draw-cursor');
+      canvas.off('mouse:down', drawStart);
+      canvas.off('mouse:move', drawSync);
+      canvas.off('mouse:up', finish);
+    };
+
+    $(this).click(function () {
+      currentShape = null;
+      startY = startX = 0;
+      canvas.deactivateAll().renderAll();
+      $(cursorHandler).addClass('draw-cursor');
+      canvas.on('mouse:down', drawStart);
+    });
+  };
+})( jQuery );
+
+
+(function(global) {
+  'use strict';
+
+  var fabric = global.fabric || (global.fabric = { });
+  var extend = fabric.util.object.extend;
+
+  fabric.ShapeDefaults = fabric.util.createClass(fabric.Observable, {
+    defaults: {},
+    initialize: function (defaults) {
+      extend(this.defaults, defaults);
+    },
+    merge: function (defaults, sign) {
+      extend(this.defaults, defaults);
+      this.fire('defaults:changed', {defaults: this.defaults, sign: sign});
+    },
+    configShape: function (shape) {
+      shape.set(this.defaults);
+    }
+  });
+
+})(this);
+
 (function () {
+
   function getRandomInt(min, max) {
     return Math.round(min + Math.random() * max);
   }
 
-  function getRandomArrow() {
-    return new fabric.Arrow([
-      getRandomInt(1, 600),
-      getRandomInt(1, 400),
-      getRandomInt(1, 600),
-      getRandomInt(1, 400)
-    ],
-    {
-      stroke: $('#colorPicker').val(),
-      arrowLength: getRandomInt(10, 50),
-      arrowAngle: getRandomInt(10, 60),
-      strokeWidth: getRandomInt(1, 5)
-    });
-  }
-
   $(document).ready(function () {
     var canvas = new fabric.Canvas('sandbox');
-    $('#colorPicker').canvasColorPicker({
-      color: '#cccc00',
-      canvas: canvas
+    var shapeDefaults = new fabric.ShapeDefaults({
+      perPixelTargetFind: true,
+      targetFindTolerance: 8
     });
-    $('#addRandomArrow').click(function () {
-      var arrow = getRandomArrow();
-      canvas.add(arrow);
+    canvas.selection = false;
+    canvas.on('object:selected', function (options) {
+      shapeDefaults.merge({
+        stroke: options.target.stroke,
+        fill: options.target.fill
+      }, 'canvas');
+    });
+    shapeDefaults.on('defaults:changed', function (options) {
+      if (options.sign == 'canvas') {
+        return;
+      }
+      var obj = canvas.getActiveObject();
+      if (!obj) {
+        return;
+      }
+      shapeDefaults.configShape(obj);
+      canvas.renderAll();
+    });
+
+    $('#strokePicker').canvasColorPicker({
+      color: '#cccc00',
+      shapeDefaults: shapeDefaults,
+      name: 'stroke'
+    });
+
+    $('#fillPicker').canvasColorPicker({
+      color: '#ffffff',
+      shapeDefaults: shapeDefaults,
+      name: 'fill'
+    });
+
+    $('#drawArrow').drawer({
+      create: function (x, y) {
+        return new fabric.Arrow([
+          x,
+          y,
+          x + 1,
+          y + 1
+        ],
+        {
+          arrowLength: getRandomInt(10, 50),
+          arrowAngle: getRandomInt(10, 60),
+          strokeWidth: getRandomInt(1, 5)
+        });
+      },
+      sync: function (shape, x, y) {
+        shape.set({x2: x, y2: y});
+      },
+      canvas: canvas,
+      cursorHandler: '.upper-canvas',
+      defaults: shapeDefaults
+    });
+
+    $('#drawRect').drawer({
+      create: function (x, y) {
+        return new fabric.Rect({
+          left: x,
+          top: y,
+          width: 1,
+          height: 1
+        });
+      },
+      sync: function (shape, x, y, startX, startY) {
+        var props = {};
+        props.left = startX < x ? startX : x;
+        props.width = startX < x ? x - startX : startX - x;
+        props.top = startY < y ? startY : y;
+        props.height = startY < y - startY ? y - startY : startY - y;
+        shape.set(props);
+      },
+      canvas: canvas,
+      cursorHandler: '.upper-canvas',
+      defaults: shapeDefaults
     });
   });
 

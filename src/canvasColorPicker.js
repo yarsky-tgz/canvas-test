@@ -1,36 +1,34 @@
 (function( $ ) {
   'use strict';
-  
+
+  var SIGN = '_picker';
+
   var defaultOptions = {
     color: '#cc0000',
-    canvas: null
+    shapeDefaults: null,
+    name: 'stroke'
   };
 
   var CanvasColorPicker = function (element, options) {
     var self = this;
     this.options = $.extend({}, defaultOptions, options);
-    this.selectedShape = null;
     this.element = element;
     this._changeColor(this.options.color, true);
+    self._applyColor();
     this.element.change(function () {
       self._changeColor(this.value, false);
       self._applyColor();
     });
-    this.options.canvas.on('object:selected', function (options) {
-      self._selectShape(options.target);
-    });
-    this.options.canvas.on('selection:cleared', function () {
-      self._clearShape();
-    });
-  };
+    this.options.shapeDefaults.on('defaults:change', function (options) {
+      var defaults = options.defaults;
+      var sign = options.sign;
 
-  CanvasColorPicker.prototype._selectShape = function (shape) {
-    this.selectedShape = shape;
-    this._changeColor(this.selectedShape.get('stroke'), true);
-  };
+      if (sign == SIGN) {
+        return;
+      }
 
-  CanvasColorPicker.prototype._clearShape = function () {
-    this.selectedShape = null;
+      self._changeColor(defaults[this.options.name], true)
+    });
   };
 
   CanvasColorPicker.prototype._changeColor = function(color, updateElement) {
@@ -41,10 +39,9 @@
   };
 
   CanvasColorPicker.prototype._applyColor = function () {
-    if (this.selectedShape !== null) {
-      this.selectedShape.set('stroke', this.options.color);
-      this.options.canvas.renderAll();
-    }
+    var props = {};
+    props[this.options.name] = this.options.color
+    this.options.shapeDefaults && this.options.shapeDefaults.merge(props, 'picker');
   };
 
   $.fn.canvasColorPicker = function(options) {
@@ -54,5 +51,5 @@
           new CanvasColorPicker($(this), options));
         }
       });
-  }
+  };
 })( jQuery );

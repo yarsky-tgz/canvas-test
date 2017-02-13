@@ -12,15 +12,24 @@
       .canvas-toolbar > li {
         display: inline-block;
       }
+      .draw-cursor {
+        cursor: crosshair !important;
+      }
     </style>
   </head>
   <body>
     <ul class="canvas-toolbar">
       <li>
-        <button id="addRandomArrow">Add Arrow</button>
+        <button id="drawArrow">Draw Arrow</button>
       </li>
       <li>
-        <input id="colorPicker" type="color" />
+        <button id="drawRect">Draw Rect</button>
+      </li>
+      <li>
+        Stroke <input id="strokePicker" type="color" />
+      </li>
+      <li>
+        Fill <input id="fillPicker" type="color" />
       </li>
     </ul>
     <canvas id="sandbox" width="640" height="480"></canvas>
