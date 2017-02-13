@@ -103,7 +103,6 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
     var createShape = options.create;
     var syncShape = options.sync;
     var canvas = options.canvas;
-    var cursorHandler = options.cursorHandler;
     var defaults = options.defaults;
     var startX = 0;
     var startY = 0;
@@ -128,7 +127,7 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
     var finish = function() {
       canvas.remove(currentShape);
       canvas.add(currentShape);
-      $(cursorHandler).removeClass('draw-cursor');
+      canvas.defaultCursor = 'default';
       canvas.off('mouse:down', drawStart);
       canvas.off('mouse:move', drawSync);
       canvas.off('mouse:up', finish);
@@ -140,7 +139,7 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
       startY = startX = 0;
       canvas.set('skipTargetFind', true);
       canvas.deactivateAll().renderAll();
-      $(cursorHandler).addClass('draw-cursor');
+      canvas.defaultCursor = 'crosshair';
       canvas.on('mouse:down', drawStart);
     });
   };
@@ -291,7 +290,6 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
         shape.set({x2: x, y2: y});
       },
       canvas: canvas,
-      cursorHandler: '.upper-canvas',
       defaults: shapeDefaults
     });
 
@@ -313,7 +311,6 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
         shape.set(props);
       },
       canvas: canvas,
-      cursorHandler: '.upper-canvas',
       defaults: shapeDefaults
     });
 
@@ -335,7 +332,6 @@ void 0!==c?null===c?void r.removeAttr(a,b):e&&"set"in e&&void 0!==(d=e.set(a,c,b
         shape.set(props);
       },
       canvas: canvas,
-      cursorHandler: '.upper-canvas',
       defaults: shapeDefaults
     });
   });

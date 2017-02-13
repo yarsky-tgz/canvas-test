@@ -66,7 +66,6 @@
         shape.set({x2: x, y2: y});
       },
       canvas: canvas,
-      cursorHandler: '.upper-canvas',
       defaults: shapeDefaults
     });
 
@@ -88,7 +87,6 @@
         shape.set(props);
       },
       canvas: canvas,
-      cursorHandler: '.upper-canvas',
       defaults: shapeDefaults
     });
 
@@ -110,7 +108,6 @@
         shape.set(props);
       },
       canvas: canvas,
-      cursorHandler: '.upper-canvas',
       defaults: shapeDefaults
     });
   });

@@ -6,7 +6,6 @@
     var createShape = options.create;
     var syncShape = options.sync;
     var canvas = options.canvas;
-    var cursorHandler = options.cursorHandler;
     var defaults = options.defaults;
     var startX = 0;
     var startY = 0;
@@ -31,7 +30,7 @@
     var finish = function() {
       canvas.remove(currentShape);
       canvas.add(currentShape);
-      $(cursorHandler).removeClass('draw-cursor');
+      canvas.defaultCursor = 'default';
       canvas.off('mouse:down', drawStart);
       canvas.off('mouse:move', drawSync);
       canvas.off('mouse:up', finish);
@@ -43,7 +42,7 @@
       startY = startX = 0;
       canvas.set('skipTargetFind', true);
       canvas.deactivateAll().renderAll();
-      $(cursorHandler).addClass('draw-cursor');
+      canvas.defaultCursor = 'crosshair';
       canvas.on('mouse:down', drawStart);
     });
   };
